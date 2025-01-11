@@ -22,6 +22,6 @@ export function findErrorForControl(
           !customErrorMessage.control || customErrorMessage.control === control
         );
       })
-    ) ?? errorKeys.find((key) => key in messages)
+    ) ?? errorKeys.filter((key) => key in messages)
   );
 }

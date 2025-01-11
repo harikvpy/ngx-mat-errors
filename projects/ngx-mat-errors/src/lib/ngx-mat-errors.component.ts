@@ -45,7 +45,17 @@ export const NGX_MAT_ERROR_DEFAULT_OPTIONS = new InjectionToken<
 
 @Component({
   selector: 'ngx-mat-errors, [ngx-mat-errors]',
-  template: `<ng-template #defaultTemplate let-error>{{ error }}</ng-template
+  template: `<ng-template #defaultTemplate let-error>
+    @if (isArray(error)) {
+      <ul>
+        @for (item of error; track $index) {
+          <li>{{item}}</li>
+        }
+      </ul>
+    } @else {
+      {{ error }}
+    }
+    </ng-template
     >@if( error$ | async; as error) {
     <ng-template
       [ngTemplateOutlet]="error.template ?? defaultTemplate"
@@ -101,25 +111,43 @@ export class NgxMatErrors implements OnDestroy {
           return;
         }
         const errors = controlWithError.errors!,
-          errorOrErrorDef = findErrorForControl(
+          errorsOrErrorDef = findErrorForControl(
             controlWithError,
             messages,
             customErrorMessages.toArray()
           );
-        if (!errorOrErrorDef) {
+        if (!errorsOrErrorDef) {
           return;
         }
-        if (typeof errorOrErrorDef === 'object') {
+        if (Array.isArray(errorsOrErrorDef)) {
+          if(errorsOrErrorDef.length > 1) {
+            const msgs = errorsOrErrorDef.map(key => {
+              return typeof messages[key] === 'function'
+              ? messages[key](errors[key])
+              : messages[key]
+            });
+            return {
+              $implicit: msgs
+            };
+          }
+          const message = messages[errorsOrErrorDef[0]];
           return {
-            template: errorOrErrorDef.template,
-            $implicit: errors[errorOrErrorDef.ngxMatErrorDefFor],
+            $implicit:
+              typeof message === 'function'
+                ? message(errors[errorsOrErrorDef[0]])
+                : message,
+          };
+        } else if (typeof errorsOrErrorDef === 'object') {
+          return {
+            template: errorsOrErrorDef.template,
+            $implicit: errors[errorsOrErrorDef.ngxMatErrorDefFor],
           };
         }
-        const message = messages[errorOrErrorDef];
+        const message = messages[errorsOrErrorDef];
         return {
           $implicit:
             typeof message === 'function'
-              ? message(errors[errorOrErrorDef])
+              ? message(errors[errorsOrErrorDef])
               : message,
         };
       }),
@@ -141,5 +169,9 @@ export class NgxMatErrors implements OnDestroy {
   /** @ignore */
   public ngOnDestroy(): void {
     this.controlChangedSubject.complete();
+  }
+
+  isArray(e: string|string[]) {
+    return typeof e !== 'string' && Array.isArray(e);
   }
 }
