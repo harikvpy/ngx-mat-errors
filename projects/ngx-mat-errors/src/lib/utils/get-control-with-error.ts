@@ -19,8 +19,11 @@ export function getControlWithError(
         return previous === 'PENDING' && current !== 'PENDING';
       })
     );
+    const invalidState = control.statusChanges.pipe(
+      filter(status => status === 'INVALID')
+    );
 
-    return merge(control.valueChanges, fromPendingStates).pipe(
+    return merge(control.valueChanges, /*fromPendingStates,*/ invalidState).pipe(
       startWith(null as any),
       map(() => control)
     );
