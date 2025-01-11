@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ViewEncapsulation,
 } from '@angular/core';
@@ -28,10 +29,40 @@ import {
 } from 'ngx-mat-errors';
 import { delay, of } from 'rxjs';
 import { AsyncMinLengthValidator } from './async-min-length-validator.directive';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'body',
-  templateUrl: './app.component.html',
+  // templateUrl: './app.component.html',
+  template: `
+    <div class="wrapper">
+      <div class="">
+        @if (form.errors) {
+          <div class="error-box">
+            <div [ngx-mat-errors]="form"></div>
+          </div>
+        }
+        <form (ngSubmit)="onSubmit()" [formGroup]="form">
+
+          <mat-form-field>
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name">
+            <mat-error ngx-mat-errors></mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Age</mat-label>
+            <input type="number" matInput formControlName="age">
+            <mat-error ngx-mat-errors></mat-error>
+          </mat-form-field>
+
+          <div>
+          <button mat-raised-button color="secondary" type="reset">Reset</button>&nbsp;
+          <button mat-raised-button color="primary" type="submit">Submit</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `,
   styleUrls: ['./app.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
@@ -44,6 +75,7 @@ import { AsyncMinLengthValidator } from './async-min-length-validator.directive'
     MatCardModule,
     MatRadioModule,
     MatToolbarModule,
+    MatButtonModule,
     ReactiveFormsModule,
     FormsModule,
     AsyncMinLengthValidator,
@@ -96,5 +128,34 @@ export class AppComponent {
       default:
         return undefined;
     }
+  }
+
+  form = new FormGroup({
+    name: new FormControl(undefined, { validators: [Validators.required, Validators.minLength(6)] }),
+    age: new FormControl(undefined, { validators: [Validators.minLength(2)] })
+  })
+
+  constructor(private cdr: ChangeDetectorRef) {}
+
+  onSubmit() {
+    const value = this.form.value;
+    if (!value?.age || value.age < 40) {
+      this.form.setErrors({
+        dateNotWithinCurrentFiscalPeriod: true,
+        minlength: true,
+        required: true
+      });
+      const name = this.form.get('name') as FormControl;
+      if (name) {
+        name.setErrors({ minlength: true });
+      }
+      const age = this.form.get('age');
+      if (age && age.value && age.value < 20) {
+        age.setErrors({ minlength: 2 });
+      }
+    } else {
+      this.form.setErrors(null);
+    }
+    this.cdr.detectChanges();
   }
 }
