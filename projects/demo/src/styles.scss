@@ -10,3 +10,10 @@ body {
   background: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
 }
+.error-box {
+  padding: 0.05em 0;
+  background-color: crimson;
+  color: white;
+  margin: 0.2em 0;
+  border-radius: 4px;
+}

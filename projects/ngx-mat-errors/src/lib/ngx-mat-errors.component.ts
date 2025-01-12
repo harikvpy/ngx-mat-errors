@@ -35,7 +35,7 @@ import type {
 } from './types';
 import { coerceToObservable } from './utils/coerce-to-observable';
 import { distinctUntilErrorChanged } from './utils/distinct-until-error-changed';
-import { findErrorForControl } from './utils/find-error-for-control';
+import { findErrorsForControl } from './utils/find-error-for-control';
 import { getAbstractControls } from './utils/get-abstract-controls';
 import { getControlWithError } from './utils/get-control-with-error';
 
@@ -45,7 +45,7 @@ export const NGX_MAT_ERROR_DEFAULT_OPTIONS = new InjectionToken<
 
 @Component({
   selector: 'ngx-mat-errors, [ngx-mat-errors]',
-  template: `<ng-template #defaultTemplate let-error>{{ error }}</ng-template
+  template: `<ng-template #defaultTemplate let-error>{{ error[0] }}</ng-template
     >@if( error$ | async; as error) {
     <ng-template
       [ngTemplateOutlet]="error.template ?? defaultTemplate"
@@ -101,26 +101,30 @@ export class NgxMatErrors implements OnDestroy {
           return;
         }
         const errors = controlWithError.errors!,
-          errorOrErrorDef = findErrorForControl(
+          errorsOrErrorDef = findErrorsForControl(
             controlWithError,
             messages,
             customErrorMessages.toArray()
           );
-        if (!errorOrErrorDef) {
+        if (!errorsOrErrorDef) {
           return;
         }
-        if (typeof errorOrErrorDef === 'object') {
+        // errorsOrErrorDef: INgxMatErrorDef
+        if (typeof errorsOrErrorDef === 'object' && !Array.isArray(errorsOrErrorDef)) {
           return {
-            template: errorOrErrorDef.template,
-            $implicit: errors[errorOrErrorDef.ngxMatErrorDefFor],
+            template: errorsOrErrorDef.template,
+            $implicit: errors[errorsOrErrorDef.ngxMatErrorDefFor],
           };
         }
-        const message = messages[errorOrErrorDef];
+        // errorsOrErrorDef: string[]
+        const msgs = errorsOrErrorDef.map(key => {
+          return typeof messages[key] === 'function'
+          ? messages[key](errors[key])
+          : messages[key]
+        });
         return {
-          $implicit:
-            typeof message === 'function'
-              ? message(errors[errorOrErrorDef])
-              : message,
+          template: undefined,
+          $implicit: msgs
         };
       }),
       distinctUntilChanged(distinctUntilErrorChanged)

@@ -3,14 +3,15 @@ import type { INgxMatErrorDef } from '../ngx-mat-error-def.directive';
 import { ErrorMessages } from '../types';
 
 /**
- * Finds the error key or custom error for a control.
+ * Finds the error key or custom error for a control. The original function
+ * has been modified
  * @returns INgxMatErrorDef | undefined
  */
-export function findErrorForControl(
+export function findErrorsForControl(
   control: AbstractControl,
   messages: ErrorMessages,
   customErrorMessages: readonly INgxMatErrorDef[]
-) {
+): string[] | INgxMatErrorDef {
   const errorKeys = Object.keys(control.errors!);
   return (
     customErrorMessages.find((customErrorMessage) =>
@@ -22,6 +23,6 @@ export function findErrorForControl(
           !customErrorMessage.control || customErrorMessage.control === control
         );
       })
-    ) ?? errorKeys.find((key) => key in messages)
+    ) ?? errorKeys.filter((key) => key in messages)
   );
 }

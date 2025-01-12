@@ -31,7 +31,7 @@ import {
 import { delay, from, interval, map, of, take, tap, zip } from 'rxjs';
 import type { LengthError } from './types';
 
-const defaultProviders: Provider[] = [
+export const defaultProviders: Provider[] = [
   {
     provide: NGX_MAT_ERROR_DEFAULT_OPTIONS,
     useValue: {
@@ -43,7 +43,7 @@ const defaultProviders: Provider[] = [
   },
 ];
 
-const defaultImports = [
+export const defaultImports = [
   ReactiveFormsModule,
   MatFormFieldModule,
   MatInputModule,

@@ -13,7 +13,7 @@ export type ErrorTemplate =
     }
   | {
       template: undefined;
-      $implicit: string;
+      $implicit: string|string[];
     }
   | undefined;
 
